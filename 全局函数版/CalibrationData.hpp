@@ -25,41 +25,48 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef __STRUCTURED_LIGHT_HPP__
-#define __STRUCTURED_LIGHT_HPP__
+#ifndef __CALIBRATIONDATA_HPP__
+#define __CALIBRATIONDATA_HPP__
 
+#include <iostream>
+#include <QString>
 #include <opencv2/core/core.hpp>
 
-#ifndef _MSC_VER
-#  ifndef _isnan
-#    include <math.h>
-#    define _isnan std::isnan
-#  endif
-#endif
-
-namespace sl
+class CalibrationData
 {
-    enum DecodeFlags {SimpleDecode = 0x00, GrayPatternDecode = 0x01, RobustDecode = 0x02};
+public:
+    static const int CALIBRATION_FILE_VERSION = 1;
 
-    extern const float PIXEL_UNCERTAIN;
-    extern const unsigned short BIT_UNCERTAIN;
+    CalibrationData();
+    ~CalibrationData();
 
-    bool decode_pattern(const std::vector<cv::Mat> & images, cv::Mat & pattern_image, cv::Mat & min_max_image, cv::Size const& projector_size,
-                        unsigned flags = SimpleDecode, const cv::Mat & direct_light = cv::Mat(), unsigned m = 5);
-    unsigned short get_robust_bit(unsigned value1, unsigned value2, unsigned Ld, unsigned Lg, unsigned m);
-    void convert_pattern(cv::Mat & pattern_image, cv::Size const& projector_size, const int offset[2], bool binary);
-    cv::Mat estimate_direct_light(const std::vector<cv::Mat> & images, float b);
+    void clear(void);
 
-    cv::Mat get_gray_image(const std::string & filename);
-    static inline bool INVALID(float value) {return _isnan(value)>0;}
-    static inline bool INVALID(const cv::Vec2f & pt) {return _isnan(pt[0]) || _isnan(pt[1]);}
-    static inline bool INVALID(const cv::Vec3f & pt) {return _isnan(pt[0]) || _isnan(pt[1]) || _isnan(pt[2]);}
+    bool is_valid(void) const;
 
-    int binaryToGray(int value);
-    inline int binaryToGray(int value, unsigned offset);
-    inline int grayToBinary(int value, unsigned offset);
+    bool load_calibration(QString const& filename);
+    bool save_calibration(QString const& filename);
 
-    cv::Mat colorize_pattern(const cv::Mat & pattern_image, unsigned set, float max_value);
+    bool load_calibration_yml(QString const& filename);
+    bool save_calibration_yml(QString const& filename);
+
+    bool save_calibration_matlab(QString const& filename);
+
+    void display(std::ostream & stream = std::cout) const;
+
+    //data
+    cv::Mat cam_K;
+    cv::Mat cam_kc;
+    cv::Mat proj_K;
+    cv::Mat proj_kc;
+    cv::Mat R;
+    cv::Mat T;
+
+    double cam_error;
+    double proj_error;
+    double stereo_error;
+
+    QString filename;
 };
 
-#endif //__STRUCTURED_LIGHT_HPP__
+#endif //__CALIBRATIONDATA_HPP__

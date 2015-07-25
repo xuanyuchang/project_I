@@ -37,7 +37,7 @@ namespace sl
     const unsigned short BIT_UNCERTAIN = 0xffff;
 };
 
-bool sl::decode_pattern(const std::vector<cv::Mat> & images, cv::Mat & pattern_image, cv::Mat & min_max_image, cv::Size const& projector_size, unsigned flags, const cv::Mat & direct_light, unsigned m)
+bool sl::decode_pattern(const std::vector<std::string> & images, cv::Mat & pattern_image, cv::Mat & min_max_image, cv::Size const& projector_size, unsigned flags, const cv::Mat & direct_light, unsigned m)
 {
     bool binary   = (flags & GrayPatternDecode)!=GrayPatternDecode;//flags没有GrayPatternDecode，则为1
     bool robust   = (flags & RobustDecode)==RobustDecode;//flags有RobustDecode，则为1
@@ -53,9 +53,9 @@ bool sl::decode_pattern(const std::vector<cv::Mat> & images, cv::Mat & pattern_i
                             << (robust?"Robust ":"") 
                             << std::endl;
 
-    int total_images = static_cast<int>(images.size());//42
-    int total_patterns = total_images/2 - 1;//20
-    int total_bits = total_patterns/2;//编码的bit数，几位二进制[10]bit
+    int total_images = static_cast<int>(images.size());
+    int total_patterns = total_images/2 - 1;
+    int total_bits = total_patterns/2;//编码的bit数，几位二进制（10位）
 
     if (2+4*total_bits!=total_images)
     {   //error
@@ -63,10 +63,10 @@ bool sl::decode_pattern(const std::vector<cv::Mat> & images, cv::Mat & pattern_i
         return false;
     }
 
-    const unsigned bit_count[] = {0, total_bits, total_bits};  //pattern bits图案的比特数 【0 10 10】
-    const unsigned set_size[]  = {1, total_bits, total_bits};  //number of image pairs图像对的个数 【1 10 10】
-    const unsigned COUNT = 2*(set_size[0]+set_size[1]+set_size[2]); //total image count总图像数  【42】
-    ///？？？（1024*768）->(0,128)
+    const unsigned bit_count[] = {0, total_bits, total_bits};  //pattern bits图案的比特数
+    const unsigned set_size[]  = {1, total_bits, total_bits};  //number of image pairs图像对的个数
+    const unsigned COUNT = 2*(set_size[0]+set_size[1]+set_size[2]); //total image count总图像数
+    //？？？
     const int pattern_offset[2] = {((1<<total_bits)-projector_size.width)/2, ((1<<total_bits)-projector_size.height)/2};
 
     if (images.size()<COUNT)
@@ -92,17 +92,17 @@ bool sl::decode_pattern(const std::vector<cv::Mat> & images, cv::Mat & pattern_i
             continue;
         }
 
-        unsigned bit = bit_count[set] - current - 1; //current bit: from 0 to (bit_count[set]-1)从第0位到第9位
+        unsigned bit = bit_count[set] - current - 1; //current bit: from 0 to (bit_count[set]-1)从第0位到第19位
         unsigned channel = set - 1;//channel为0
 
         //load images
-        const cv::Mat & gray_image1 = images.at(t+0);//第一对图像的第一个
+        const cv::Mat & gray_image1 = get_gray_image(images.at(t+0));//第一对图像的第一个
         if (gray_image1.rows<1)
         {
             std::cout << "Failed to load " << images.at(t+0) << std::endl;
             return false;
         }
-        const cv::Mat & gray_image2 = images.at(t+1);//第一对图像的第二个
+        const cv::Mat & gray_image2 = get_gray_image(images.at(t+1));//第一对图像的第二个
         if (gray_image2.rows<1)
         {
             std::cout << "Failed to load " << images.at(t+1) << std::endl;
@@ -142,18 +142,18 @@ bool sl::decode_pattern(const std::vector<cv::Mat> & images, cv::Mat & pattern_i
         //compare
         for (int h=0; h<pattern_image.rows; h++)
         {
-            const unsigned char * row1 = gray_image1.ptr<unsigned char>(h);//取第一行第一个像素的指针
+            const unsigned char * row1 = gray_image1.ptr<unsigned char>(h);
             const unsigned char * row2 = gray_image2.ptr<unsigned char>(h);
-            const cv::Vec2b * row_light = (robust ? direct_light.ptr<cv::Vec2b>(h) : NULL);//Ld和Lg
+            const cv::Vec2b * row_light = (robust ? direct_light.ptr<cv::Vec2b>(h) : NULL);
             cv::Vec2f * pattern_row = pattern_image.ptr<cv::Vec2f>(h);
             cv::Vec2b * min_max_row = min_max_image.ptr<cv::Vec2b>(h);
 
             for (int w=0; w<pattern_image.cols; w++)
             {
-                cv::Vec2f & pattern = pattern_row[w];//pattern_image图像的像素值
-                cv::Vec2b & min_max = min_max_row[w];//min_max_image图像的像素值
-                unsigned char value1 = row1[w];//第一张图片的像素值
-                unsigned char value2 = row2[w];//相反的图片的像素值
+                cv::Vec2f & pattern = pattern_row[w];
+                cv::Vec2b & min_max = min_max_row[w];
+                unsigned char value1 = row1[w];
+                unsigned char value2 = row2[w];
 
                 if (init)
                 {
@@ -164,11 +164,11 @@ bool sl::decode_pattern(const std::vector<cv::Mat> & images, cv::Mat & pattern_i
                 //min/max
                 if (init || value1<min_max[0] || value2<min_max[0])
                 {
-                    min_max[0] = (value1<value2?value1:value2);//最小值（同一像素的两张图片比较）
+                    min_max[0] = (value1<value2?value1:value2);
                 }
                 if (init || value1>min_max[1] || value2>min_max[1])
                 {
-                    min_max[1] = (value1>value2?value1:value2);//最大值（同一像素的两张图片比较）
+                    min_max[1] = (value1>value2?value1:value2);
                 }
                 
                 if (!robust)//不是论文所用的算法，只是简单的判断一个像素是1或者是0
@@ -183,7 +183,7 @@ bool sl::decode_pattern(const std::vector<cv::Mat> & images, cv::Mat & pattern_i
                     if (row_light && (init || /*(将或变成与，是正确的)*/pattern[channel]!=PIXEL_UNCERTAIN))//这里的判断不对，如果存在一位编码为uncertain，pixel也为uncertain，其他{位}还会进入判断
                     {
                         const cv::Vec2b & L = row_light[w];
-                        //【进行robust 像素分类】（ pixel classification ）
+                        //进行robust 像素分类（ pixel classification ）
                         unsigned short p = get_robust_bit(value1, value2, L[0], L[1], m);
                         if (p==BIT_UNCERTAIN)
                         {
@@ -191,7 +191,7 @@ bool sl::decode_pattern(const std::vector<cv::Mat> & images, cv::Mat & pattern_i
                         }
                         else
                         {
-                            pattern[channel] += (p<<bit);//从第一对图像开始，直到第十对图像；其中channel=0是纵向投影的解码过程；解码值（gray）存入pattern[channel]中
+                            pattern[channel] += (p<<bit);
                         }
                     }
                 }
@@ -205,10 +205,10 @@ bool sl::decode_pattern(const std::vector<cv::Mat> & images, cv::Mat & pattern_i
 
     if (!binary)
     {   //not binary... it must be gray code得到图案的解码值，pattern_image
-        convert_pattern(pattern_image, projector_size, pattern_offset, binary);//第一个参数：判断图像是1/255来移位得到的gray码的值；
-    }                                                                          //第二个参数：投影仪尺寸：1024*768；
-                                                                               //第三个参数：图案的补偿：（0，128）
-    std::cout << " --- decode_pattern END ---\n";                              //第四个参数：标记：是否是二进制编码：这里是false
+        convert_pattern(pattern_image, projector_size, pattern_offset, binary);
+    }
+
+    std::cout << " --- decode_pattern END ---\n";
 
     return true;
 }
@@ -254,13 +254,9 @@ void sl::convert_pattern(cv::Mat & pattern_image, cv::Size const& projector_size
         std::cout << "Converting gray code to binary\n";
     }
 
-   ///测试用 cv::Mat image=cv::Mat(pattern_image.rows,pattern_image.cols,CV_32FC1);///
-
     for (int h=0; h<pattern_image.rows; h++)
     {
         cv::Vec2f * pattern_row = pattern_image.ptr<cv::Vec2f>(h);
-        ///测试用float *data=image.ptr<float>(h);
-
         for (int w=0; w<pattern_image.cols; w++)
         {
             cv::Vec2f & pattern = pattern_row[w];
@@ -282,32 +278,26 @@ void sl::convert_pattern(cv::Mat & pattern_image, cv::Size const& projector_size
                 if (!INVALID(pattern[0]))//检查是否为uncertain像素点
                 {
                     int p = static_cast<int>(pattern[0]);//p代表的是像素的格雷码值或uncertain的像素点
-                    ///offset[0]=0;
-                    int code = grayToBinary(p, /*测试用0*/offset[0]);///将格雷码转换为普通二进制编码？？？？？？？
+                    int code = grayToBinary(p, offset[0]);//将格雷码转换为普通二进制编码？？？？？？？
 
                     if (code<0) {code = 0;}
                     else if (code>=projector_size.width) {code = projector_size.width - 1;}//？？？？？如果码字大于2^10,则码字更正为projector_size.width - 1（这里的目的是控制码字的数值，其中码长又投影仪投射的条纹个数来确定的，因此需要控制（且根据投影仪的图像大小就可控制，如何编码，在投影仪方？？？））
 
                     pattern[0] = code + (pattern[0] - p);//pattern存储的时解码后的，不包括uncertain像素点的码值大小，(颜色)范围：pattern[0]=(0,projector_size.width-1);(颜色)范围:pattern[1]=(0,projector_size.height - 1)
-                    ///测试用data[w]=pattern[0];
                 }
                 if (!INVALID(pattern[1]))
                 {
                     int p = static_cast<int>(pattern[1]);
-
-                    int code = grayToBinary(p, /*测试用0*/offset[1]);///
+                    int code = grayToBinary(p, offset[1]);
 
                     if (code<0) {code = 0;}
                     else if (code>=projector_size.height) {code = projector_size.height - 1;}
 
                     pattern[1] = code + (pattern[1] - p);
-                    ///测试用data[w]=pattern[1];///
                 }
             }
         }
     }
-    ///测试用cv::imshow("pattern_image",image);
-    ///测试用std::cout/*<<image.row(767)*/<<image.row(900);
 }
 
 cv::Mat sl::estimate_direct_light(const std::vector<cv::Mat> & images, float b)
@@ -420,7 +410,7 @@ int sl::binaryToGray(int value) {return util_binaryToGray(value);}
 inline int sl::binaryToGray(int value, unsigned offset) {return util_binaryToGray(value + offset);}
 inline int sl::grayToBinary(int value, unsigned offset) {return (util_grayToBinary(value, 32) - offset);}
 
-cv::Mat sl::colorize_pattern(const cv::Mat & pattern_image, unsigned set, float max_value)//将编码值着色,set=0:纵向；set=1:横向。
+cv::Mat sl::colorize_pattern(const cv::Mat & pattern_image, unsigned set, float max_value)//将编码值着色
 {
     if (pattern_image.rows==0)
     {   //empty image
@@ -448,10 +438,10 @@ cv::Mat sl::colorize_pattern(const cv::Mat & pattern_image, unsigned set, float 
         {
             if (row1[w][set]>max_value || INVALID(row1[w][set]))//不应该存在大于投影仪长和宽的解码值
             {   //invalid value: use grey
-                row2[w] = cv::Vec3b(128, 128, 128);//rgb值为128.128.128是uncertain点和超出投影仪范围的解码值的点，【灰色】
+                row2[w] = cv::Vec3b(128, 128, 128);
                 continue;
             }
-            //display【黑】-》【红】-》【绿】-》【蓝】
+            //display
             float t = row1[w][set]*255.f/max_t;
             float c1 = 0.f, c2 = 0.f, c3 = 0.f;
             if (t<=1.f*dt)

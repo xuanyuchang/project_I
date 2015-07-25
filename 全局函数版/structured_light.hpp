@@ -44,7 +44,7 @@ namespace sl
     extern const float PIXEL_UNCERTAIN;
     extern const unsigned short BIT_UNCERTAIN;
 
-    bool decode_pattern(const std::vector<cv::Mat> & images, cv::Mat & pattern_image, cv::Mat & min_max_image, cv::Size const& projector_size,
+    bool decode_pattern(const std::vector<std::string> & images, cv::Mat & pattern_image, cv::Mat & min_max_image, cv::Size const& projector_size,
                         unsigned flags = SimpleDecode, const cv::Mat & direct_light = cv::Mat(), unsigned m = 5);
     unsigned short get_robust_bit(unsigned value1, unsigned value2, unsigned Ld, unsigned Lg, unsigned m);
     void convert_pattern(cv::Mat & pattern_image, cv::Size const& projector_size, const int offset[2], bool binary);
