@@ -182,13 +182,13 @@ bool decode_gray_set(unsigned level, cv::Mat & pattern_image, cv::Mat & min_max_
     cv::Size projector_size(get_projector_width(), get_projector_height());//投影仪的尺寸
 
     //解码图案,且pattern_image此时已是解码后的图像，常规二进制编码值，对于uncertain像素点，赋值为【1.#QNAN】
+    
     //输入image_names是42张图像的灰度图像；??但，函数中，是否使用了前两张图片？？？？？
     //images.clear();在这里将其中转换为灰度图像；
     //for(int i=0;i<42;i++)
     //{
         
     //}
-    
     bool rv = sl::decode_pattern(image_names, pattern_image, min_max_image, projector_size, sl::RobustDecode|sl::GrayPatternDecode, direct_light, m);
 
     return rv;
