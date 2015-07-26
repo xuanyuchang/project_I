@@ -53,7 +53,7 @@ Application::Application(int & argc, char ** argv) :
                                             //cv::Mat R;
                                             // cv::Mat T;
     chessboard_size(11, 7),        //初始化棋盘的大小，横纵分别为多少个角点
-    corner_size(21.f, 21.08f),        //初始化角点矩形的长度
+    corner_size(20.97f, 21.06f),        //初始化角点矩形的长度
     chessboard_corners(),           //检测出的棋盘角点的位置的向量
     projector_corners(),            //检测出的（计算出的）投影仪图像中角点的位置的向量
     pattern_list(),                 //一系列的投影图案（原始照片）---或者是pattern images选项中的图像
@@ -69,12 +69,12 @@ Application::~Application()
 }
 
 void Application::loadimage(void){
-    for(int j=1;j<4;j++){///测试用2->4
+    for(int j=1;j<5;j++){///测试用2->4
         //QString dir="C://Users//Administrator//Desktop//calibrate_pic//";
         //QString num="%1//"
-        for(int i=1;i<43;i++){///测试用1->0
+        for(int i=0;i<38;i++){///测试用1->0
 
-            cv::Mat image=cv::imread(QString("C://Users//jo//Desktop//calibrate_pic//%1//cam_%2.png").arg(j).arg(i, 2, 10, QLatin1Char('0')).toStdString());
+            cv::Mat image=cv::imread(QString("C://Users//Administrator//Desktop//111//pattern//capture_result//test2//9bit2//%1//pat_%2.jpg").arg(j).arg(i, 2, 10, QLatin1Char('0')).toStdString());
             ///测试用cv::Mat image=cv::imread(QString("C://Users//jo//Desktop//decode//original software make the patterns_10bit//pat_%1.png").arg(i, 2, 10, QLatin1Char('0')).toStdString());//768*1024,源程序产生的pattern
             ///测试用cv::Mat image=cv::imread(QString("C://Users//jo//Desktop//decode//for_calibration_1024//768&10bit//test//pat_%1.jpg").arg(i, 2, 10, QLatin1Char('0')).toStdString());//自己做得pattern:768
             ///测试用cv::Mat image=cv::imread(QString("C://Users//jo//Desktop//calibrate_pic//4//cam_%1.png").arg(i, 2, 10, QLatin1Char('0')).toStdString());//标定例程图案：2；
@@ -99,12 +99,12 @@ cv::Mat Application::get_image(unsigned level,unsigned i)
 
 int Application::get_projector_width(void)//此函数可根据不同的投影仪尺寸进行修改……………………………………………………………………………………
 {
-    return 720;/*1024;*/
+    return /*720;*/1024;
 }
 
 int Application::get_projector_height(void)//此函数可根据不同的投影仪尺寸进行修改……………………………………………………………………………………
 {
-    return 640;/*768;*/
+    return /*640;*/768;
 }
 
 
@@ -221,7 +221,7 @@ bool Application::decode_gray_set(unsigned level, cv::Mat & pattern_image, cv::M
 
     //输入image_names是42张图像的灰度图像；??但，函数中，是否使用了前两张图片？？？？？
     images.clear();//在这里将其中转换为灰度图像；
-    for(int i=0;i<42;i++)///42->38
+    for(int i=0;i<38;i++)///42->38
     {
         images.push_back(get_image(level,i));
 
@@ -319,7 +319,10 @@ void Application::calibrate(void)
                          }
 
                          img_points.push_back(cv::Point2f(w, h));//将选中的点集坐标压入栈
-                         proj_points.push_back(cv::Point2f(pattern));//将选中的点集对应的垂直，水平的解码图案的码值压入栈
+
+                         cv::Vec2f double_code=2*row[w];
+                         proj_points.push_back(cv::Point2f(double_code));
+                        /// proj_points.push_back(cv::Point2f(pattern));//将选中的点集对应的垂直，水平的解码图案的码值压入栈
 
                          //out_pattern = pattern;
                      }
@@ -418,7 +421,7 @@ void Application::calibrate(void)
          calib.display();
 
          //save to file(保存文件opencv常用的文件格式)
-         QString path = QString("C:/Users/jo/Desktop/calibrate_pic");/////文件保存的根目录
+         QString path = QString("C:/Users/Administrator/Desktop/decode/calibration_test/patterns");/////文件保存的根目录
          QString filename = path + "/calibration.yml";
          if (calib.save_calibration(filename))
          {

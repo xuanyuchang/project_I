@@ -92,7 +92,7 @@ public:
     ~Application();
 
     void loadimage(void);
-    cv::Mat get_image(unsigned level,unsigned i=0);
+    cv::Mat get_image(unsigned level,unsigned i=1);
     bool extract_chessboard_corners(void);
     int get_projector_width(void);
     int get_projector_height(void);

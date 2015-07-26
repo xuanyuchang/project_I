@@ -254,12 +254,12 @@ void sl::convert_pattern(cv::Mat & pattern_image, cv::Size const& projector_size
         std::cout << "Converting gray code to binary\n";
     }
 
-   ///测试用 cv::Mat image=cv::Mat(pattern_image.rows,pattern_image.cols,CV_32FC1);///
+   cv::Mat image=cv::Mat(pattern_image.rows,pattern_image.cols,CV_32FC1);//////测试用
 
     for (int h=0; h<pattern_image.rows; h++)
     {
         cv::Vec2f * pattern_row = pattern_image.ptr<cv::Vec2f>(h);
-        ///测试用float *data=image.ptr<float>(h);
+        float *data=image.ptr<float>(h);///测试用
 
         for (int w=0; w<pattern_image.cols; w++)
         {
@@ -289,7 +289,7 @@ void sl::convert_pattern(cv::Mat & pattern_image, cv::Size const& projector_size
                     //else if (code>=projector_size.width) {code = projector_size.width - 1;}//？？？？？如果码字大于2^10,则码字更正为projector_size.width - 1（这里的目的是控制码字的数值，其中码长又投影仪投射的条纹个数来确定的，因此需要控制（且根据投影仪的图像大小就可控制，如何编码，在投影仪方？？？））
 
                     pattern[0] = code + (pattern[0] - p);//pattern存储的时解码后的，不包括uncertain像素点的码值大小，(颜色)范围：pattern[0]=(0,projector_size.width-1);(颜色)范围:pattern[1]=(0,projector_size.height - 1)
-                    ///测试用data[w]=pattern[0];
+                  data[w]=pattern[0]; ///测试用
                 }
                 if (!INVALID(pattern[1]))
                 {
@@ -301,13 +301,13 @@ void sl::convert_pattern(cv::Mat & pattern_image, cv::Size const& projector_size
                     //else if (code>=projector_size.height) {code = projector_size.height - 1;}
 
                     pattern[1] = code + (pattern[1] - p);
-                    ///测试用data[w]=pattern[1];///
+                    //data[w]=pattern[1];///
                 }
             }
         }
     }
     ///测试用cv::imshow("pattern_image",image);
-    ///测试用std::cout/*<<image.row(767)*/<<image.row(900);
+   std::cout/*<<image.row(767)*/<<image.row(300); ///测试用
 }
 
 cv::Mat sl::estimate_direct_light(const std::vector<cv::Mat> & images, float b)

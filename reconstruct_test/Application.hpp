@@ -45,6 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #include "CalibrationData.hpp"
+#include "scan3d.hpp"
 
 
 
@@ -92,13 +93,18 @@ public:
     ~Application();
 
     void loadimage(void);
-    cv::Mat get_image(unsigned level,unsigned i=0);
+    cv::Mat get_image(unsigned level,unsigned i=0,Role role = GrayImageRole);
     bool extract_chessboard_corners(void);
     int get_projector_width(void);
     int get_projector_height(void);
     bool decode_gray_set(unsigned level, cv::Mat & pattern_image, cv::Mat & min_max_image);
     void calibrate(void);
 
+    void load_calib(void);
+    void reconstruct(void);
+
+    void reconstruct_model(int level, scan3d::Pointcloud & pointcloud);
+    void compute_normals(scan3d::Pointcloud & pointcloud);
     //data dir
 //    void set_root_dir(const QString & dirname);
 //    QString get_root_dir(void) const;
@@ -145,8 +151,9 @@ public:
 
 public:
 
-    std::vector<std::vector<cv::Mat> > _sum_pattern_to_corner;//图像数据源:
-    std::vector<cv::Mat> _patterns_to_corner;
+    std::vector<std::vector<cv::Mat> > _sum_pattern_to_corner;//图像数据源:(标定用的图像)
+    //std::vector<cv::Mat> _patterns_to_corner;//图像数据源（子集）
+    std::vector<cv::Mat> _image_to_reconstruct;//重建的图像集合
 
     CalibrationData calib;
 
@@ -157,7 +164,7 @@ public:
     std::vector<cv::Mat> pattern_list;//解码后的图像，已经将像素点分类好了；每一个Mat是两通道的矩阵，分别是垂直和水平的（码值的解法？？）编码值
     std::vector<cv::Mat> min_max_list;//每一对图案的灰度值的最大和最小的值
     std::vector<cv::Mat> projector_view_list;
-    //scan3d::Pointcloud pointcloud;
+    scan3d::Pointcloud pointcloud;
 };
 
 #define APP dynamic_cast<Application *>(Application::instance())

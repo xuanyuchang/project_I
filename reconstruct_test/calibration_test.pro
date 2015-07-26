@@ -18,7 +18,9 @@ TEMPLATE = app
 SOURCES += main.cpp \
     CalibrationData.cpp \
     structured_light.cpp \
-    Application.cpp
+    Application.cpp \
+    scan3d.cpp \
+    io_util.cpp
 INCLUDEPATH+=F:\opencv2.4.4\opencv\release\install\include\
 F:\opencv2.4.4\opencv\release\install\include\opencv\
 F:\opencv2.4.4\opencv\release\install\include\opencv2
@@ -30,4 +32,6 @@ LIBS +=D:\Qt_test\Project02_3D\OKAPI32.lib\
 HEADERS += \
     CalibrationData.hpp \
     structured_light.hpp \
-    Application.hpp
+    Application.hpp \
+    scan3d.hpp \
+    io_util.hpp
